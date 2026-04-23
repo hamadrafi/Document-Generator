@@ -262,6 +262,41 @@
   }
   .big-generate-btn:hover:not(:disabled) { background: var(--orange-dk); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(232,98,10,.4); }
   .big-generate-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ── MOBILE RESPONSIVE ── */
+  .menu-toggle { display: none; background: none; border: none; color: #fff; cursor: pointer; padding: 5px; }
+
+  @media (max-width: 900px) {
+    .topbar { padding: 0 16px; }
+    .menu-toggle { display: block; }
+    .topbar-badge { display: none; }
+
+    .layout { grid-template-columns: 1fr; }
+    
+    .sidebar {
+      position: fixed; left: -100%; width: 280px; z-index: 100;
+      transition: left .3s ease;
+      box-shadow: 10px 0 30px rgba(0,0,0,.1);
+    }
+    .sidebar.open { left: 0; }
+    
+    .main { padding: 20px 16px; }
+    
+    .grid2, .grid3, .preview-grid { grid-template-columns: 1fr !important; gap: 12px; }
+    
+    .nav-btns { flex-direction: column; gap: 10px; }
+    .nav-btn { width: 100%; justify-content: center; }
+    .nav-btn.next { order: -1; }
+
+    .modal { padding: 20px; border-radius: 12px; }
+    
+    .project-item { flex-direction: column; }
+    .proj-actions { flex-direction: row; width: 100%; margin-top: 10px; }
+    .proj-actions button { flex: 1; text-align: center; }
+
+    .phase-item .grid3 { grid-template-columns: 1fr 1fr !important; }
+    .phase-item .grid3 .field:first-child { grid-column: span 2; }
+  }
 </style>
 </head>
 <body>
@@ -269,6 +304,9 @@
 <!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-brand">
+    <button class="menu-toggle" onclick="toggleSidebar()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
     <div class="dot"></div>
     <span>Proposal Generator</span>
   </div>
@@ -279,7 +317,7 @@
 <div class="layout">
 
   <!-- SIDEBAR NAV -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
     <div class="sidebar-label">Steps</div>
     <div class="step-nav">
       <button class="step-btn active" data-step="0" onclick="goStep(0)">
@@ -563,6 +601,10 @@ function saveProjects() { localStorage.setItem('pg_projects', JSON.stringify(pro
 function savePhases()   { localStorage.setItem('pg_phases',   JSON.stringify(phases)); }
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
 function goStep(n) {
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + n).classList.add('active');
@@ -573,6 +615,11 @@ function goStep(n) {
   currentStep = n;
   if (n === 7) buildPreview();
   window.scrollTo({ top: 0 });
+  
+  // Close sidebar on mobile after clicking a step
+  if (window.innerWidth <= 900) {
+    document.getElementById('sidebar').classList.remove('open');
+  }
 }
 
 // ─── PROJECTS ─────────────────────────────────────────────────────────────────
