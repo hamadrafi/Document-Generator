@@ -848,7 +848,7 @@ async function generateAndDownload() {
     const {
       Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
       AlignmentType, WidthType, BorderStyle, ShadingType, VerticalAlign, LevelFormat,
-      Header, Footer, TabStopType, TabStopPosition
+      Header, Footer, TabStopType, TabStopPosition, ExternalHyperlink
     } = docx;
 
     // ── colors
@@ -860,7 +860,7 @@ async function generateAndDownload() {
       TEXT_GRAY:'888888', CREAM:'FFD7B0',
       HEADER_TEXT:'6B7A99',
     };
-    const PW = 9360;
+    const PW = 10080; // Matches available width (12240 - 2*1080)
 
     // ── helpers
     const nb = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
@@ -957,7 +957,7 @@ async function generateAndDownload() {
           alignment: AlignmentType.LEFT,
           spacing: { before: 0, after: 60 },
           border: {
-            bottom: { style: BorderStyle.SINGLE, size: 4, color: 'DDDDDD', space: 4 }
+            bottom: { style: BorderStyle.SINGLE, size: 4, color: C.ORANGE, space: 4 }
           },
           children: [
             new TextRun({ text: yourName.toUpperCase(), bold: true, color: C.HEADER_TEXT, size: 18, font: 'Arial' }),
@@ -983,7 +983,7 @@ async function generateAndDownload() {
           alignment: AlignmentType.LEFT,
           spacing: { before: 60, after: 0 },
           border: {
-            top: { style: BorderStyle.SINGLE, size: 4, color: 'DDDDDD', space: 4 }
+            top: { style: BorderStyle.SINGLE, size: 4, color: C.ORANGE, space: 4 }
           },
           children: [
             new TextRun({ text: footerLine, bold: false, color: C.HEADER_TEXT, size: 16, font: 'Arial' }),
@@ -996,13 +996,23 @@ async function generateAndDownload() {
     const headerTable = new Table({
       width:{size:PW,type:WidthType.DXA}, columnWidths:[PW],
       rows:[
-        new TableRow({ children:[cell(mp([
-          {text:`${yourName.toUpperCase()}`, bold:true, color:C.WHITE, size:52},
-          {text:headerSub.toUpperCase(), bold:false, color:C.CREAM, size:24, break:1},
-          {text:`Prepared Exclusively for ${clientName}`,            bold:true, color:C.WHITE, size:26, break:2},
-          {text:projTitle,                                           bold:false,color:C.WHITE, size:22, break:1, italic:true},
-          globalUrl ? {text:globalUrl, bold:true, color:C.CREAM, size:18, break:1} : null,
-        ].filter(Boolean),{align:AlignmentType.CENTER,before:160,after:160}), C.DARK_BLUE, {w:PW,top:300,bottom:300,left:300,right:300})] }),
+        new TableRow({ children:[cell(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 160, after: 160 },
+          children: [
+            new TextRun({ text: `${yourName.toUpperCase()}`, bold: true, color: C.WHITE, size: 52 }),
+            new TextRun({ text: headerSub.toUpperCase(), bold: false, color: C.CREAM, size: 24, break: 1 }),
+            new TextRun({ text: `Prepared Exclusively for ${clientName}`, bold: true, color: C.WHITE, size: 26, break: 2 }),
+            new TextRun({ text: projTitle, bold: false, color: C.WHITE, size: 22, break: 1, italics: true }),
+            ...(globalUrl ? [
+              new TextRun({ text: "", break: 1 }),
+              new ExternalHyperlink({
+                children: [new TextRun({ text: globalUrl, bold: true, color: C.CREAM, size: 18 })],
+                link: globalUrl.startsWith('http') ? globalUrl : 'https://' + globalUrl
+              })
+            ] : [])
+          ]
+        }), C.DARK_BLUE, {w:PW,top:300,bottom:300,left:300,right:300})] }),
         new TableRow({ children:[cell(
           p(`Prepared by ${yourName}  │  ${yourTitle || 'Developer'}  │  ${propDate !== '—' ? propDate : ''}`,
             {bold:true,color:C.WHITE,size:21,align:AlignmentType.CENTER}),
@@ -1058,7 +1068,24 @@ async function generateAndDownload() {
               ],{before:80,after:80}), C.LIGHT_BLUE, {w:nW,vAlign:VerticalAlign.TOP,top:140}),
               cell([
                 p(proj.desc,{size:23,color:C.TEXT_DARK,after:100}),
-                proj.url ? p(`Link: ${proj.url}`, {size:20, color:C.MID_BLUE, bold:true, italic:true}) : null,
+                proj.url ? new Paragraph({
+                  children: [
+                    new TextRun({ text: "Link: ", size: 20, color: C.TEXT_DARK, bold: true }),
+                    new ExternalHyperlink({
+                      children: [
+                        new TextRun({
+                          text: proj.url,
+                          size: 20,
+                          color: C.MID_BLUE,
+                          bold: true,
+                          italics: true,
+                        }),
+                      ],
+                      link: proj.url.startsWith('http') ? proj.url : 'https://' + proj.url,
+                    }),
+                  ],
+                  spacing: { after: 40 }
+                }) : null,
                 proj.result ? p(`Result: ${proj.result}`, {size:20, color:C.TEXT_GRAY, italic:true}) : null,
               ].filter(Boolean), C.WHITE, {w:dW,vAlign:VerticalAlign.TOP,top:140}),
             ]})
@@ -1076,7 +1103,7 @@ async function generateAndDownload() {
     ].filter(Boolean);
 
     // ── 6. Investment table
-    const invCols = [500, 2800, 3360, 1350, 1350];
+    const invCols = [538, 3015, 3619, 1454, 1454];
     const invBlock = [
       secHead('INVESTMENT SUMMARY & PAYMENT SCHEDULE'),
       ...sp(1),
@@ -1112,7 +1139,7 @@ async function generateAndDownload() {
     ].filter(Boolean);
 
     // ── 7. Phase details
-    const pCols = [1400, 5760, 2200];
+    const pCols = [1508, 6204, 2368];
     const phaseBlock = [
       secHead('PHASE-BY-PHASE BREAKDOWN'),
       ...phases.flatMap(ph => [
